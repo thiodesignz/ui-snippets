@@ -24,13 +24,13 @@ import { toast } from 'sonner';
 const formSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   description: z.string().min(1, 'Description is required'),
-  tags: z.string().min(1, 'At least one tag is required').transform(value => value.split(',').map(tag => tag.trim())),
+  tags: z.string().min(1, 'At least one tag is required'),
   plugUrl: z.string().optional(),
   file: z.custom<File>().optional(),
   figmaUrl: z.string().optional(),
 });
 
-type FormData = z.input<typeof formSchema>;
+type FormData = z.infer<typeof formSchema>;
 
 interface UploadFormProps {
   user: User;
@@ -71,13 +71,14 @@ export function UploadForm({ user }: UploadFormProps) {
         fileUrl = data.path;
       }
 
-      const tagArray = values.tags.split(',').map(tag => tag.trim());
+      // Transform tags string to array
+      const tags = values.tags.split(',').map(tag => tag.trim()).filter(tag => tag.length > 0);
 
       const { error } = await supabase.from('snippets').insert({
         user_id: user.id,
         title: values.title,
         description: values.description,
-        tags: tagArray,
+        tags,
         plug_url: values.plugUrl,
         file_url: fileUrl,
         figma_url: values.figmaUrl,
